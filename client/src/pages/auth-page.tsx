@@ -107,7 +107,7 @@ export default function AuthPage() {
                         <Input 
                           {...field} 
                           placeholder="Enter your username" 
-                          className="bg-primary-50 border-gray-700"
+                          className="bg-primary-50 border-gray-700 text-white"
                         />
                       </FormControl>
                       <FormMessage />
@@ -131,7 +131,7 @@ export default function AuthPage() {
                           {...field} 
                           type="password" 
                           placeholder="••••••••" 
-                          className="bg-primary-50 border-gray-700"
+                          className="bg-primary-50 border-gray-700 text-white"
                         />
                       </FormControl>
                       <FormMessage />
@@ -181,7 +181,7 @@ export default function AuthPage() {
                         <Input 
                           {...field} 
                           placeholder="Choose a username" 
-                          className="bg-primary-50 border-gray-700"
+                          className="bg-primary-50 border-gray-700 text-white"
                         />
                       </FormControl>
                       <FormMessage />
@@ -200,7 +200,7 @@ export default function AuthPage() {
                           {...field} 
                           type="email" 
                           placeholder="Enter your email" 
-                          className="bg-primary-50 border-gray-700"
+                          className="bg-primary-50 border-gray-700 text-white"
                         />
                       </FormControl>
                       <FormMessage />
@@ -216,10 +216,15 @@ export default function AuthPage() {
                       <FormLabel>Mobile No</FormLabel>
                       <FormControl>
                         <Input 
-                          {...field} 
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                          value={field.value ?? ''}
+                          disabled={field.disabled}
                           type="tel" 
                           placeholder="Enter your mobile number" 
-                          className="bg-primary-50 border-gray-700"
+                          className="bg-primary-50 border-gray-700 text-white"
                         />
                       </FormControl>
                       <FormMessage />
@@ -238,7 +243,7 @@ export default function AuthPage() {
                           {...field} 
                           type="password" 
                           placeholder="Create a password" 
-                          className="bg-primary-50 border-gray-700"
+                          className="bg-primary-50 border-gray-700 text-white"
                         />
                       </FormControl>
                       <FormMessage />
@@ -257,7 +262,7 @@ export default function AuthPage() {
                           {...field} 
                           type="password" 
                           placeholder="Confirm your password" 
-                          className="bg-primary-50 border-gray-700"
+                          className="bg-primary-50 border-gray-700 text-white"
                         />
                       </FormControl>
                       <FormMessage />
