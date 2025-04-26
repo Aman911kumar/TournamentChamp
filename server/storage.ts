@@ -54,7 +54,7 @@ export interface IStorage {
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   
   // Session storage
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any to avoid type issues with session.SessionStore
 }
 
 export class MemStorage implements IStorage {
@@ -63,7 +63,7 @@ export class MemStorage implements IStorage {
   private tournaments: Map<number, Tournament>;
   private registrations: Map<number, Registration>;
   private transactions: Map<number, Transaction>;
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any to avoid type issues with session.SessionStore
   
   private userIdCounter: number;
   private gameIdCounter: number;
@@ -400,7 +400,7 @@ export class MemStorage implements IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any to avoid type issues with session.SessionStore
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({
