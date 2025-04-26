@@ -7,8 +7,13 @@ import {
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+import { db } from "./db";
+import { pool } from "./db";
+import { eq, desc, and, isNull } from "drizzle-orm";
 
 const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 // modify the interface with any CRUD methods
 // you might need
@@ -394,4 +399,192 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  sessionStore: session.SessionStore;
+
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true
+    });
+  }
+
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  async updateUserBalance(userId: number, newBalance: number): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ balance: newBalance })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  // Game operations
+  async getGames(): Promise<Game[]> {
+    return db.select().from(games);
+  }
+
+  async getGame(id: number): Promise<Game | undefined> {
+    const [game] = await db.select().from(games).where(eq(games.id, id));
+    return game;
+  }
+
+  async createGame(insertGame: InsertGame): Promise<Game> {
+    const [game] = await db.insert(games).values(insertGame).returning();
+    return game;
+  }
+
+  // Tournament operations
+  async getTournaments(): Promise<Tournament[]> {
+    return db.select().from(tournaments);
+  }
+
+  async getTournament(id: number): Promise<Tournament | undefined> {
+    const [tournament] = await db.select().from(tournaments).where(eq(tournaments.id, id));
+    return tournament;
+  }
+
+  async getTournamentsByGame(gameId: number): Promise<Tournament[]> {
+    return db.select().from(tournaments).where(eq(tournaments.gameId, gameId));
+  }
+
+  async getFeaturedTournaments(): Promise<Tournament[]> {
+    return db.select().from(tournaments).where(eq(tournaments.featured, true));
+  }
+
+  async getUpcomingTournaments(): Promise<Tournament[]> {
+    return db.select().from(tournaments).where(eq(tournaments.status, "upcoming"));
+  }
+
+  async getLiveTournaments(): Promise<Tournament[]> {
+    return db.select().from(tournaments).where(eq(tournaments.status, "live"));
+  }
+
+  async getCompletedTournaments(): Promise<Tournament[]> {
+    return db.select().from(tournaments).where(eq(tournaments.status, "completed"));
+  }
+
+  async getFreeTournaments(): Promise<Tournament[]> {
+    return db.select().from(tournaments).where(eq(tournaments.entryFee, 0));
+  }
+
+  async createTournament(insertTournament: InsertTournament): Promise<Tournament> {
+    const [tournament] = await db
+      .insert(tournaments)
+      .values({ ...insertTournament, currentPlayers: 0 })
+      .returning();
+    return tournament;
+  }
+
+  async updateTournamentStatus(id: number, status: string): Promise<Tournament | undefined> {
+    const [updatedTournament] = await db
+      .update(tournaments)
+      .set({ status })
+      .where(eq(tournaments.id, id))
+      .returning();
+    return updatedTournament;
+  }
+
+  async updateTournamentPlayers(id: number, count: number): Promise<Tournament | undefined> {
+    const [updatedTournament] = await db
+      .update(tournaments)
+      .set({ currentPlayers: count })
+      .where(eq(tournaments.id, id))
+      .returning();
+    return updatedTournament;
+  }
+
+  // Registration operations
+  async getRegistrationsByUser(userId: number): Promise<Registration[]> {
+    return db.select().from(registrations).where(eq(registrations.userId, userId));
+  }
+
+  async getRegistrationsByTournament(tournamentId: number): Promise<Registration[]> {
+    return db.select().from(registrations).where(eq(registrations.tournamentId, tournamentId));
+  }
+
+  async createRegistration(insertRegistration: InsertRegistration): Promise<Registration> {
+    const [registration] = await db
+      .insert(registrations)
+      .values(insertRegistration)
+      .returning();
+
+    // Update tournament player count
+    const tournament = await this.getTournament(insertRegistration.tournamentId);
+    if (tournament) {
+      await this.updateTournamentPlayers(tournament.id, tournament.currentPlayers + 1);
+    }
+
+    return registration;
+  }
+
+  async updateRegistrationStatus(
+    id: number,
+    status: string,
+    placement?: number,
+    earnings?: number
+  ): Promise<Registration | undefined> {
+    const updateData: any = { status };
+    if (placement !== undefined) {
+      updateData.placement = placement;
+    }
+    if (earnings !== undefined) {
+      updateData.earnings = earnings;
+    }
+
+    const [updatedRegistration] = await db
+      .update(registrations)
+      .set(updateData)
+      .where(eq(registrations.id, id))
+      .returning();
+    return updatedRegistration;
+  }
+
+  // Transaction operations
+  async getTransactionsByUser(userId: number): Promise<Transaction[]> {
+    return db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.userId, userId))
+      .orderBy(desc(transactions.timestamp));
+  }
+
+  async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
+    const [transaction] = await db
+      .insert(transactions)
+      .values(insertTransaction)
+      .returning();
+
+    // Update user balance
+    const user = await this.getUser(insertTransaction.userId);
+    if (user) {
+      const newBalance = user.balance + insertTransaction.amount;
+      await this.updateUserBalance(user.id, newBalance);
+    }
+
+    return transaction;
+  }
+}
+
+// Use database storage instead of memory storage
+export const storage = new DatabaseStorage();

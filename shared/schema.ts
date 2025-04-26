@@ -1,7 +1,9 @@
 import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Define tables first (without relations)
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -103,3 +105,44 @@ export type Transaction = typeof transactions.$inferSelect;
 
 // Auth type
 export type LoginData = Pick<InsertUser, "username" | "password">;
+
+// Define relations
+export const usersRelations = relations(users, ({ many }) => ({
+  registrations: many(registrations),
+  transactions: many(transactions),
+}));
+
+export const gamesRelations = relations(games, ({ many }) => ({
+  tournaments: many(tournaments),
+}));
+
+export const tournamentsRelations = relations(tournaments, ({ one, many }) => ({
+  game: one(games, {
+    fields: [tournaments.gameId],
+    references: [games.id],
+  }),
+  registrations: many(registrations),
+  transactions: many(transactions),
+}));
+
+export const registrationsRelations = relations(registrations, ({ one }) => ({
+  user: one(users, {
+    fields: [registrations.userId],
+    references: [users.id],
+  }),
+  tournament: one(tournaments, {
+    fields: [registrations.tournamentId],
+    references: [tournaments.id],
+  }),
+}));
+
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  user: one(users, {
+    fields: [transactions.userId],
+    references: [users.id],
+  }),
+  tournament: one(tournaments, {
+    fields: [transactions.tournamentId],
+    references: [tournaments.id],
+  }),
+}));
