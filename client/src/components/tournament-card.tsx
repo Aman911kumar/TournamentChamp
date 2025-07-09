@@ -16,7 +16,7 @@ interface TournamentCardProps {
 export function TournamentCard({ tournament, minimal = false, showRegisterButton = true }: TournamentCardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   const { data: game } = useQuery<Game>({
     queryKey: [`/api/games/${tournament.gameId}`],
     enabled: !!tournament.gameId,
@@ -53,10 +53,10 @@ export function TournamentCard({ tournament, minimal = false, showRegisterButton
       });
       return;
     }
-    
+
     registerMutation.mutate();
   };
-  
+
   const getStatusBadge = () => {
     if (tournament.status === "live") {
       return (
@@ -76,23 +76,24 @@ export function TournamentCard({ tournament, minimal = false, showRegisterButton
 
   const getTimeDisplay = () => {
     const startTime = new Date(tournament.startTime);
-    
+
     if (tournament.status === "live") {
-      const endTime = new Date(tournament.endTime || "");
+      if (!tournament.endTime) return "Unknown end time";
+
+      const endTime = new Date(tournament.endTime);
+      if (isNaN(endTime.getTime())) return "Invalid end time";
+
       return `Ends in ${formatDistanceToNow(endTime, { addSuffix: false })}`;
     } else if (tournament.status === "upcoming") {
       if (isToday(startTime)) {
         return `Today, ${format(startTime, "h:mm a")}`;
       } else if (isTomorrow(startTime)) {
         return `Tomorrow, ${format(startTime, "h:mm a")}`;
-      } else {
-        return format(startTime, "MMM d, h:mm a");
       }
     }
-    
     return format(startTime, "MMM d, h:mm a");
   };
-  
+
   const getButtonText = () => {
     if (tournament.status === "live") {
       return "Join Now";
@@ -106,10 +107,10 @@ export function TournamentCard({ tournament, minimal = false, showRegisterButton
     return (
       <div className="bg-primary-50 rounded-xl overflow-hidden">
         <div className="relative">
-          <img 
-            src={tournament.imageUrl || "https://placehold.co/500x200/0F1923/FFFFFF/png?text=Tournament"} 
-            className="w-full h-24 object-cover" 
-            alt={tournament.title} 
+          <img
+            src={tournament.imageUrl || "https://placehold.co/500x200/0F1923/FFFFFF/png?text=Tournament"}
+            className="w-full h-24 object-cover"
+            alt={tournament.title}
           />
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-primary via-primary/50 to-transparent"></div>
           {game && (
@@ -137,7 +138,7 @@ export function TournamentCard({ tournament, minimal = false, showRegisterButton
             </div>
           </div>
           {showRegisterButton && (
-            <button 
+            <button
               className="bg-secondary hover:bg-secondary-600 text-white font-medium py-1.5 px-4 rounded-lg transition text-sm"
               onClick={handleRegister}
               disabled={registerMutation.isPending}
@@ -189,15 +190,17 @@ export function TournamentCard({ tournament, minimal = false, showRegisterButton
           <div className="flex items-center text-xs text-gray-400">
             <i className="ri-time-line mr-1"></i>
             <span>
-              {tournament.status === "live" 
-                ? `Ends in ${formatDistanceToNow(new Date(tournament.endTime || ""))}`
-                : tournament.tournamentType
-              }
+              {tournament.status === "live"
+                ? tournament.endTime
+                  ? `Ends in ${formatDistanceToNow(new Date(tournament.endTime))}`
+                  : "Ends at unknown time"
+                : tournament.tournamentType}
             </span>
+
           </div>
         </div>
         {showRegisterButton && (
-          <button 
+          <button
             className="bg-secondary hover:bg-secondary-600 text-white font-medium py-2 px-4 rounded-lg transition"
             onClick={handleRegister}
             disabled={registerMutation.isPending}

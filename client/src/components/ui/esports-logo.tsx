@@ -56,7 +56,7 @@ export function EsportsLogoWithText({ className = "", size = "md" }: { className
   };
 
   return (
-    <div className={`flex items-center ${className}`}>
+    <div className={`flex items-center ${className} justify-center`}>
       <EsportsLogo size="sm" className="mr-2" />
       <h1 className={`font-rajdhani font-bold ${sizeClasses[size]}`}>
         eSPORT <span className="text-secondary">CHAMPIONS</span>

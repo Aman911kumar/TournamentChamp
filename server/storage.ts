@@ -1,9 +1,9 @@
-import { 
+import {
   users, type User, type InsertUser,
   games, type Game, type InsertGame,
   tournaments, type Tournament, type InsertTournament,
-  registrations, type Registration, type InsertRegistration, 
-  transactions, type Transaction, type InsertTransaction 
+  registrations, type Registration, type InsertRegistration,
+  transactions, type Transaction, type InsertTransaction
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -24,12 +24,12 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserBalance(userId: number, newBalance: number): Promise<User | undefined>;
-  
+
   // Game operations
   getGames(): Promise<Game[]>;
   getGame(id: number): Promise<Game | undefined>;
   createGame(game: InsertGame): Promise<Game>;
-  
+
   // Tournament operations
   getTournaments(): Promise<Tournament[]>;
   getTournament(id: number): Promise<Tournament | undefined>;
@@ -42,17 +42,17 @@ export interface IStorage {
   createTournament(tournament: InsertTournament): Promise<Tournament>;
   updateTournamentStatus(id: number, status: string): Promise<Tournament | undefined>;
   updateTournamentPlayers(id: number, count: number): Promise<Tournament | undefined>;
-  
+
   // Registration operations
   getRegistrationsByUser(userId: number): Promise<Registration[]>;
   getRegistrationsByTournament(tournamentId: number): Promise<Registration[]>;
   createRegistration(registration: InsertRegistration): Promise<Registration>;
   updateRegistrationStatus(id: number, status: string, placement?: number, earnings?: number): Promise<Registration | undefined>;
-  
+
   // Transaction operations
   getTransactionsByUser(userId: number): Promise<Transaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
-  
+
   // Session storage
   sessionStore: any; // Using any to avoid type issues with session.SessionStore
 }
@@ -64,7 +64,7 @@ export class MemStorage implements IStorage {
   private registrations: Map<number, Registration>;
   private transactions: Map<number, Transaction>;
   sessionStore: any; // Using any to avoid type issues with session.SessionStore
-  
+
   private userIdCounter: number;
   private gameIdCounter: number;
   private tournamentIdCounter: number;
@@ -77,17 +77,17 @@ export class MemStorage implements IStorage {
     this.tournaments = new Map();
     this.registrations = new Map();
     this.transactions = new Map();
-    
+
     this.userIdCounter = 1;
     this.gameIdCounter = 1;
     this.tournamentIdCounter = 1;
     this.registrationIdCounter = 1;
     this.transactionIdCounter = 1;
-    
+
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // prune expired entries every 24h
     });
-    
+
     // Initialize with sample data
     this.initSampleData();
   }
@@ -100,9 +100,9 @@ export class MemStorage implements IStorage {
       { name: "Call of Duty", imageUrl: "https://www.callofduty.com/content/dam/atvi/callofduty/cod-touchui/blog/hero/mw-wz/WZ-Season-Three-Announce-TOUT.jpg" },
       { name: "Fortnite", imageUrl: "https://cdn2.unrealengine.com/24br-s24-egs-launcher-pdp-2560x1440-2560x1440-2a7353b5a438.jpg" }
     ];
-    
+
     gameData.forEach(game => this.createGame(game));
-    
+
     // Create tournaments
     const tournamentData: InsertTournament[] = [
       {
@@ -190,9 +190,9 @@ export class MemStorage implements IStorage {
         imageUrl: "https://assets.xboxservices.com/assets/15/02/1502c04d-c508-4364-ae47-53bca9dabba2.jpg"
       }
     ];
-    
+
     tournamentData.forEach(tournament => this.createTournament(tournament));
-    
+
     // Update current players
     this.updateTournamentPlayers(1, 32);
     this.updateTournamentPlayers(2, 78);
@@ -208,7 +208,7 @@ export class MemStorage implements IStorage {
       (user) => user.username === username,
     );
   }
-  
+
   async getUserByEmail(email: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
       (user) => user.email === email,
@@ -222,7 +222,7 @@ export class MemStorage implements IStorage {
     this.users.set(id, user);
     return user;
   }
-  
+
   async updateUserBalance(userId: number, newBalance: number): Promise<User | undefined> {
     const user = await this.getUser(userId);
     if (user) {
@@ -232,79 +232,79 @@ export class MemStorage implements IStorage {
     }
     return undefined;
   }
-  
+
   // Game operations
   async getGames(): Promise<Game[]> {
     return Array.from(this.games.values());
   }
-  
+
   async getGame(id: number): Promise<Game | undefined> {
     return this.games.get(id);
   }
-  
+
   async createGame(insertGame: InsertGame): Promise<Game> {
     const id = this.gameIdCounter++;
     const game: Game = { ...insertGame, id };
     this.games.set(id, game);
     return game;
   }
-  
+
   // Tournament operations
   async getTournaments(): Promise<Tournament[]> {
     return Array.from(this.tournaments.values());
   }
-  
+
   async getTournament(id: number): Promise<Tournament | undefined> {
     return this.tournaments.get(id);
   }
-  
+
   async getTournamentsByGame(gameId: number): Promise<Tournament[]> {
     return Array.from(this.tournaments.values()).filter(
       tournament => tournament.gameId === gameId
     );
   }
-  
+
   async getFeaturedTournaments(): Promise<Tournament[]> {
     return Array.from(this.tournaments.values()).filter(
       tournament => tournament.featured
     );
   }
-  
+
   async getUpcomingTournaments(): Promise<Tournament[]> {
     return Array.from(this.tournaments.values()).filter(
       tournament => tournament.status === "upcoming"
     );
   }
-  
+
   async getLiveTournaments(): Promise<Tournament[]> {
     return Array.from(this.tournaments.values()).filter(
       tournament => tournament.status === "live"
     );
   }
-  
+
   async getCompletedTournaments(): Promise<Tournament[]> {
     return Array.from(this.tournaments.values()).filter(
       tournament => tournament.status === "completed"
     );
   }
-  
+
   async getFreeTournaments(): Promise<Tournament[]> {
     return Array.from(this.tournaments.values()).filter(
       tournament => tournament.entryFee === 0
     );
   }
-  
+
   async createTournament(insertTournament: InsertTournament): Promise<Tournament> {
     const id = this.tournamentIdCounter++;
-    const tournament: Tournament = { 
-      ...insertTournament, 
-      id, 
+    const tournament: Tournament = {
+      ...insertTournament,
+      id,
       currentPlayers: 0
     };
     this.tournaments.set(id, tournament);
     return tournament;
   }
-  
+
   async updateTournamentStatus(id: number, status: string): Promise<Tournament | undefined> {
     const tournament = await this.getTournament(id);
     if (tournament) {
@@ -314,7 +314,7 @@ export class MemStorage implements IStorage {
     }
     return undefined;
   }
-  
+
   async updateTournamentPlayers(id: number, count: number): Promise<Tournament | undefined> {
     const tournament = await this.getTournament(id);
     if (tournament) {
@@ -324,41 +324,41 @@ export class MemStorage implements IStorage {
     }
     return undefined;
   }
-  
+
   // Registration operations
   async getRegistrationsByUser(userId: number): Promise<Registration[]> {
     return Array.from(this.registrations.values()).filter(
       registration => registration.userId === userId
     );
   }
-  
+
   async getRegistrationsByTournament(tournamentId: number): Promise<Registration[]> {
     return Array.from(this.registrations.values()).filter(
       registration => registration.tournamentId === tournamentId
     );
   }
-  
+
   async createRegistration(insertRegistration: InsertRegistration): Promise<Registration> {
     const id = this.registrationIdCounter++;
     const registeredAt = new Date();
-    const registration: Registration = { 
-      ...insertRegistration, 
-      id, 
-      registeredAt, 
-      placement: null, 
-      earnings: 0 
+    const registration: Registration = {
+      ...insertRegistration,
+      id,
+      registeredAt,
+      placement: null,
+      earnings: 0
     };
     this.registrations.set(id, registration);
-    
+
     // Update tournament player count
     const tournament = await this.getTournament(insertRegistration.tournamentId);
     if (tournament) {
       await this.updateTournamentPlayers(tournament.id, tournament.currentPlayers + 1);
     }
-    
+
     return registration;
   }
-  
+
   async updateRegistrationStatus(id: number, status: string, placement?: number, earnings?: number): Promise<Registration | undefined> {
     const registration = this.registrations.get(id);
     if (registration) {
@@ -374,27 +374,27 @@ export class MemStorage implements IStorage {
     }
     return undefined;
   }
-  
+
   // Transaction operations
   async getTransactionsByUser(userId: number): Promise<Transaction[]> {
     return Array.from(this.transactions.values())
       .filter(transaction => transaction.userId === userId)
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()); // Sort by newest first
   }
-  
+
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
     const id = this.transactionIdCounter++;
     const timestamp = new Date();
     const transaction: Transaction = { ...insertTransaction, id, timestamp };
     this.transactions.set(id, transaction);
-    
+
     // Update user balance
     const user = await this.getUser(insertTransaction.userId);
     if (user) {
       const newBalance = user.balance + insertTransaction.amount;
       await this.updateUserBalance(user.id, newBalance);
     }
-    
+
     return transaction;
   }
 }

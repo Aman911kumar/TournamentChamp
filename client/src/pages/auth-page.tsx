@@ -107,7 +107,7 @@ export default function AuthPage() {
                         <Input 
                           {...field} 
                           placeholder="Enter your username" 
-                          className="bg-primary-50 border-gray-700 text-white"
+                          className="bg-primary-50 border-gray-700 text-black"
                         />
                       </FormControl>
                       <FormMessage />
@@ -131,7 +131,7 @@ export default function AuthPage() {
                           {...field} 
                           type="password" 
                           placeholder="••••••••" 
-                          className="bg-primary-50 border-gray-700 text-white"
+                          className="bg-primary-50 border-gray-700 text-black"
                         />
                       </FormControl>
                       <FormMessage />
@@ -160,7 +160,7 @@ export default function AuthPage() {
                   <i className="ri-facebook-fill text-xl mr-2"></i>
                   Facebook
                 </Button>
-                <Button variant="outline" className="bg-white hover:bg-gray-100 text-gray-900 border-none">
+                <Button variant="outline" className="bg-gray-500 hover:bg-gray-600  border-none">
                   <i className="ri-google-fill text-xl mr-2"></i>
                   Google
                 </Button>
@@ -181,7 +181,7 @@ export default function AuthPage() {
                         <Input 
                           {...field} 
                           placeholder="Choose a username" 
-                          className="bg-primary-50 border-gray-700 text-white"
+                          className="bg-primary-50 border-gray-700 text-black"
                         />
                       </FormControl>
                       <FormMessage />
@@ -200,7 +200,7 @@ export default function AuthPage() {
                           {...field} 
                           type="email" 
                           placeholder="Enter your email" 
-                          className="bg-primary-50 border-gray-700 text-white"
+                          className="bg-primary-50 border-gray-700 text-black"
                         />
                       </FormControl>
                       <FormMessage />
@@ -224,7 +224,7 @@ export default function AuthPage() {
                           disabled={field.disabled}
                           type="tel" 
                           placeholder="Enter your mobile number" 
-                          className="bg-primary-50 border-gray-700 text-white"
+                          className="bg-primary-50 border-gray-700 text-black"
                         />
                       </FormControl>
                       <FormMessage />
@@ -243,7 +243,7 @@ export default function AuthPage() {
                           {...field} 
                           type="password" 
                           placeholder="Create a password" 
-                          className="bg-primary-50 border-gray-700 text-white"
+                          className="bg-primary-50 border-gray-700 text-black"
                         />
                       </FormControl>
                       <FormMessage />
@@ -262,7 +262,7 @@ export default function AuthPage() {
                           {...field} 
                           type="password" 
                           placeholder="Confirm your password" 
-                          className="bg-primary-50 border-gray-700 text-white"
+                          className="bg-primary-50 border-gray-700 text-black"
                         />
                       </FormControl>
                       <FormMessage />
@@ -272,7 +272,7 @@ export default function AuthPage() {
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-secondary hover:bg-secondary-600 text-white" 
+                  className="w-full bg-secondary hover:bg-secondary-600 text-black" 
                   disabled={registerMutation.isPending}
                 >
                   {registerMutation.isPending ? "Creating account..." : "Sign Up"}
